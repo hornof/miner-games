@@ -68,6 +68,42 @@
             spawnAsteroid();
         }
 
+        // Space pirate setup
+        const pirates = [];
+        function spawnPirate() {
+            const pirate = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 25,
+                speed: 2,
+                directionX: Math.random() < 0.5 ? -1 : 1,
+                directionY: Math.random() < 0.5 ? -1 : 1,
+            };
+            pirates.push(pirate);
+        }
+
+        // Spawn initial pirates
+        for (let i = 0; i < 3; i++) {
+            spawnPirate();
+        }
+
+        // Alien setup
+        const aliens = [];
+        function spawnAlien() {
+            const alien = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: 30,
+                friendly: Math.random() < 0.5,
+            };
+            aliens.push(alien);
+        }
+
+        // Spawn initial aliens
+        for (let i = 0; i < 2; i++) {
+            spawnAlien();
+        }
+
         // Movement controls
         const keys = {};
         window.addEventListener('keydown', (e) => keys[e.key] = true);
@@ -82,6 +118,27 @@
             // Prevent going off-screen
             player.x = Math.max(0, Math.min(canvas.width, player.x));
             player.y = Math.max(0, Math.min(canvas.height, player.y));
+        }
+
+        function updatePirates() {
+            pirates.forEach(pirate => {
+                pirate.x += pirate.speed * pirate.directionX;
+                pirate.y += pirate.speed * pirate.directionY;
+
+                // Reverse direction if hitting edges
+                if (pirate.x <= 0 || pirate.x >= canvas.width) pirate.directionX *= -1;
+                if (pirate.y <= 0 || pirate.y >= canvas.height) pirate.directionY *= -1;
+
+                // Check collision with player
+                const dx = player.x - pirate.x;
+                const dy = player.y - pirate.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.size + pirate.size) {
+                    player.health -= 10;
+                    updateHUD();
+                }
+            });
         }
 
         function detectCollisions() {
@@ -121,12 +178,33 @@
             });
         }
 
+        function drawPirates() {
+            pirates.forEach(pirate => {
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(pirate.x, pirate.y, pirate.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        function drawAliens() {
+            aliens.forEach(alien => {
+                ctx.fillStyle = alien.friendly ? 'green' : 'purple';
+                ctx.beginPath();
+                ctx.arc(alien.x, alien.y, alien.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             updatePlayer();
+            updatePirates();
             detectCollisions();
             drawPlayer();
             drawAsteroids();
+            drawPirates();
+            drawAliens();
             requestAnimationFrame(gameLoop);
         }
 
