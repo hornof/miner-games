@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asteroid Miner Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: #111;
+        }
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="hud">
+        <p>Resources: <span id="resources">0</span></p>
+        <p>Health: <span id="health">100</span></p>
+        <p>Upgrades: <span id="upgrades">0</span></p>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Player setup
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: 20,
+            speed: 5,
+            resources: 0,
+            health: 100,
+        };
+
+        // Asteroid setup
+        const asteroids = [];
+        function spawnAsteroid() {
+            const asteroid = {
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 30 + 10,
+                mined: false
+            };
+            asteroids.push(asteroid);
+        }
+
+        // Spawn initial asteroids
+        for (let i = 0; i < 10; i++) {
+            spawnAsteroid();
+        }
+
+        // Movement controls
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function updatePlayer() {
+            if (keys['ArrowUp']) player.y -= player.speed;
+            if (keys['ArrowDown']) player.y += player.speed;
+            if (keys['ArrowLeft']) player.x -= player.speed;
+            if (keys['ArrowRight']) player.x += player.speed;
+
+            // Prevent going off-screen
+            player.x = Math.max(0, Math.min(canvas.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height, player.y));
+        }
+
+        function detectCollisions() {
+            asteroids.forEach((asteroid, index) => {
+                const dx = player.x - asteroid.x;
+                const dy = player.y - asteroid.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.size + asteroid.size && !asteroid.mined) {
+                    asteroid.mined = true;
+                    player.resources += 10;
+                    updateHUD();
+                }
+            });
+        }
+
+        function updateHUD() {
+            document.getElementById('resources').textContent = player.resources;
+            document.getElementById('health').textContent = player.health;
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = 'cyan';
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawAsteroids() {
+            asteroids.forEach(asteroid => {
+                if (!asteroid.mined) {
+                    ctx.fillStyle = 'gray';
+                    ctx.beginPath();
+                    ctx.arc(asteroid.x, asteroid.y, asteroid.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updatePlayer();
+            detectCollisions();
+            drawPlayer();
+            drawAsteroids();
+            requestAnimationFrame(gameLoop);
+        }
+
+        updateHUD();
+        gameLoop();
+    </script>
+</body>
+</html>
