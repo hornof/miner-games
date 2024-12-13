@@ -96,6 +96,7 @@
                 y: Math.random() * canvas.height,
                 size: 30,
                 friendly: Math.random() < 0.5,
+                hasCollided: false
             };
             aliens.push(alien);
         }
@@ -149,6 +150,25 @@
                     }
                 } else {
                     pirate.hasCollided = false;
+                }
+            });
+        }
+
+        function updateAliens() {
+            aliens.forEach(alien => {
+                const dx = player.x - alien.x;
+                const dy = player.y - alien.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.size + alien.size) {
+                    if (alien.friendly && !alien.hasCollided) {
+                        player.resources += 20; // Friendly alien grants resources
+                        alien.hasCollided = true;
+                        console.log("Friendly alien! Resources increased.");
+                        updateHUD();
+                    }
+                } else {
+                    alien.hasCollided = false;
                 }
             });
         }
@@ -212,6 +232,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             updatePlayer();
             updatePirates();
+            updateAliens();
             detectCollisions();
             drawPlayer();
             drawAsteroids();
