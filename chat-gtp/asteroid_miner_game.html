@@ -78,6 +78,7 @@
                 speed: 2,
                 directionX: Math.random() < 0.5 ? -1 : 1,
                 directionY: Math.random() < 0.5 ? -1 : 1,
+                hasCollided: false
             };
             pirates.push(pirate);
         }
@@ -106,14 +107,20 @@
 
         // Movement controls
         const keys = {};
-        window.addEventListener('keydown', (e) => keys[e.key] = true);
-        window.addEventListener('keyup', (e) => keys[e.key] = false);
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            e.preventDefault(); // Prevent scrolling with arrow keys
+        });
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+            e.preventDefault();
+        });
 
         function updatePlayer() {
-            if (keys['ArrowUp']) player.y -= player.speed;
-            if (keys['ArrowDown']) player.y += player.speed;
-            if (keys['ArrowLeft']) player.x -= player.speed;
-            if (keys['ArrowRight']) player.x += player.speed;
+            if (keys['ArrowUp'] || keys['w']) player.y -= player.speed;
+            if (keys['ArrowDown'] || keys['s']) player.y += player.speed;
+            if (keys['ArrowLeft'] || keys['a']) player.x -= player.speed;
+            if (keys['ArrowRight'] || keys['d']) player.x += player.speed;
 
             // Prevent going off-screen
             player.x = Math.max(0, Math.min(canvas.width, player.x));
@@ -135,8 +142,13 @@
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
                 if (distance < player.size + pirate.size) {
-                    player.health -= 10;
-                    updateHUD();
+                    if (!pirate.hasCollided) {
+                        player.health -= 10;
+                        pirate.hasCollided = true;
+                        updateHUD();
+                    }
+                } else {
+                    pirate.hasCollided = false;
                 }
             });
         }
